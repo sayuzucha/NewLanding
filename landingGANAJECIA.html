@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GANAJEC AI — Gestión inteligente de ganado bovino</title>
+  <style>
+    /* ── Reset & base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green:       #1D7A55;
+      --green-light: #E8F5EF;
+      --green-mid:   #2E7D32;
+      --brown:       #8B4A2B;
+      --cream:       #FAFAF7;
+      --surface:     #FFFFFF;
+      --border:      #E8E5DC;
+      --text-1:      #1A1A1A;
+      --text-2:      #888880;
+      --text-3:      #AEADA6;
+      --red:         #C0392B;
+      --gold:        #D4AC0D;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--cream);
+      color: var(--text-1);
+      line-height: 1.6;
+    }
+    a { text-decoration: none; color: inherit; }
+
+    /* ── Layout helpers ── */
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+    .section { padding: 96px 0; }
+    .section-sm { padding: 64px 0; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--green-light); color: var(--green);
+      font-size: 12px; font-weight: 600; letter-spacing: .5px;
+      padding: 4px 12px; border-radius: 20px; margin-bottom: 16px;
+    }
+    .section-title {
+      font-size: clamp(28px, 4vw, 42px);
+      font-weight: 800; line-height: 1.15;
+      letter-spacing: -.5px; margin-bottom: 16px;
+    }
+    .section-sub {
+      font-size: 17px; color: var(--text-2);
+      max-width: 560px; margin-bottom: 48px;
+    }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    @media (max-width: 768px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .hide-mobile { display: none !important; }
+    }
+
+    /* ── Navbar ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(250,250,247,.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px; max-width: 1100px; margin: 0 auto; padding: 0 24px;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 18px; font-weight: 800; letter-spacing: -.4px;
+    }
+    .logo-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: var(--cream); display: grid; place-items: center;
+      overflow: hidden; border: 1px solid var(--border);
+    }
+    .logo-icon img {
+      width: 26px; height: 26px; object-fit: contain;
+    }
+    .nav-links {
+      display: flex; gap: 32px;
+      list-style: none; font-size: 14px; font-weight: 500;
+    }
+    .nav-links a { color: var(--text-2); transition: color .2s; }
+    .nav-links a:hover { color: var(--green); }
+    .btn-nav {
+      background: var(--green); color: #fff;
+      padding: 8px 20px; border-radius: 8px;
+      font-size: 13px; font-weight: 600;
+      transition: opacity .2s;
+    }
+    .btn-nav:hover { opacity: .85; }
+
+    /* ── Hero ── */
+    .hero {
+      padding: 80px 0 64px;
+      background: linear-gradient(160deg, #F0FAF5 0%, var(--cream) 60%);
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; top: -80px; right: -80px;
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(29,122,85,.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-inner {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 48px; align-items: center;
+      max-width: 1100px; margin: 0 auto; padding: 0 24px;
+    }
+    @media (max-width: 768px) {
+      .hero-inner { grid-template-columns: 1fr; }
+    }
+    .hero-tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--green-light); color: var(--green);
+      font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+      padding: 4px 12px; border-radius: 20px;
+      border: 1px solid rgba(29,122,85,.2);
+      margin-bottom: 20px;
+    }
+    .hero-title {
+      font-size: clamp(36px, 5vw, 58px);
+      font-weight: 900; line-height: 1.08;
+      letter-spacing: -.8px; margin-bottom: 20px;
+    }
+    .hero-title span { color: var(--green); }
+    .hero-desc {
+      font-size: 18px; color: var(--text-2); line-height: 1.65;
+      margin-bottom: 36px; max-width: 500px;
+    }
+    .hero-cta { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--green); color: #fff;
+      padding: 14px 28px; border-radius: 12px;
+      font-size: 15px; font-weight: 700;
+      box-shadow: 0 4px 20px rgba(29,122,85,.25);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(29,122,85,.35); }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--surface); color: var(--text-1);
+      padding: 14px 28px; border-radius: 12px;
+      font-size: 15px; font-weight: 600;
+      border: 1px solid var(--border);
+      transition: border-color .2s;
+    }
+    .btn-secondary:hover { border-color: var(--green); color: var(--green); }
+    .hero-stats {
+      display: flex; gap: 32px; margin-top: 40px; padding-top: 32px;
+      border-top: 1px solid var(--border);
+    }
+    .stat-item { }
+    .stat-num { font-size: 28px; font-weight: 800; color: var(--text-1); }
+    .stat-lbl { font-size: 12px; color: var(--text-2); font-weight: 500; }
+
+    /* ── Phone mockup ── */
+    .phone-wrap {
+      display: flex; justify-content: center; align-items: center;
+      position: relative;
+    }
+    .phone {
+      width: 240px;
+      background: #1A1A1A;
+      border-radius: 40px;
+      padding: 12px;
+      box-shadow: 0 32px 80px rgba(0,0,0,.25), 0 4px 12px rgba(0,0,0,.12);
+      position: relative;
+    }
+    .phone-notch {
+      width: 80px; height: 22px;
+      background: #1A1A1A;
+      border-radius: 0 0 16px 16px;
+      margin: 0 auto 8px;
+      position: relative; z-index: 2;
+    }
+    .phone-screen {
+      background: var(--cream);
+      border-radius: 28px;
+      overflow: hidden;
+      min-height: 460px;
+      padding: 16px;
+    }
+    /* Home screen mockup */
+    .ph-header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;
+    }
+    .ph-greeting { font-size: 9px; color: var(--text-2); }
+    .ph-name { font-size: 13px; font-weight: 800; color: var(--text-1); }
+    .ph-role-chip {
+      font-size: 7px; font-weight: 700;
+      background: var(--green-light); color: var(--green);
+      padding: 2px 7px; border-radius: 10px; border: 1px solid rgba(29,122,85,.2);
+      margin-left: 5px;
+    }
+    .ph-avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--green-light); display: grid; place-items: center;
+      font-size: 9px; font-weight: 700; color: var(--green);
+    }
+    .ph-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 14px; }
+    .ph-card {
+      background: var(--surface); border-radius: 10px;
+      border: 1px solid var(--border); padding: 7px 6px;
+      text-align: center;
+    }
+    .ph-card-num { font-size: 14px; font-weight: 800; }
+    .ph-card-lbl { font-size: 6.5px; color: var(--text-2); line-height: 1.3; }
+    .ph-section-title { font-size: 10px; font-weight: 700; margin-bottom: 7px; }
+    .ph-animal {
+      background: var(--surface); border-radius: 8px;
+      border: 1px solid var(--border); padding: 7px 8px;
+      display: flex; align-items: center; gap: 7px; margin-bottom: 5px;
+    }
+    .ph-animal-icon {
+      width: 24px; height: 24px; border-radius: 7px;
+      background: #F5F3EE; display: grid; place-items: center; font-size: 11px;
+    }
+    .ph-animal-name { font-size: 9px; font-weight: 700; }
+    .ph-animal-sub { font-size: 7.5px; color: var(--text-2); }
+    .ph-animal-chip {
+      margin-left: auto; font-size: 6.5px; font-weight: 600;
+      background: var(--green-light); color: var(--green);
+      padding: 2px 6px; border-radius: 8px;
+    }
+    .ph-pred {
+      background: var(--surface); border-radius: 8px;
+      border: 1px solid var(--border); padding: 7px 8px;
+      display: flex; align-items: center; gap: 6px; margin-bottom: 5px;
+    }
+    .ph-pred-icon {
+      width: 22px; height: 22px; border-radius: 6px;
+      background: #FEF9E7; display: grid; place-items: center; font-size: 10px;
+    }
+    .ph-pred-name { font-size: 9px; font-weight: 600; }
+    .ph-pred-sub { font-size: 7px; color: var(--text-2); }
+    .ph-pred-pct { margin-left: auto; font-size: 9px; font-weight: 700; color: var(--green); }
+    .ph-navbar {
+      display: flex; justify-content: space-around;
+      padding: 8px 0 2px;
+      border-top: 1px solid var(--border);
+      margin-top: 10px;
+    }
+    .ph-nav-item { text-align: center; }
+    .ph-nav-dot {
+      width: 18px; height: 18px; border-radius: 5px;
+      background: var(--green-light); margin: 0 auto 2px;
+      display: grid; place-items: center; font-size: 9px;
+    }
+    .ph-nav-lbl { font-size: 6px; color: var(--text-2); }
+    .ph-nav-item.active .ph-nav-dot { background: var(--green); }
+    .ph-nav-item.active .ph-nav-lbl { color: var(--green); font-weight: 700; }
+
+    /* Phone 2 (prediction result) — floating behind */
+    .phone-secondary {
+      position: absolute; right: -40px; top: 40px;
+      width: 160px; z-index: -1; opacity: .75;
+      transform: rotate(4deg);
+    }
+
+    /* ── Features grid ── */
+    .features { background: var(--surface); }
+    .feature-card {
+      background: var(--cream);
+      border: 1px solid var(--border);
+      border-radius: 16px; padding: 28px;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .feature-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,.06); }
+    .feature-icon {
+      width: 48px; height: 48px; border-radius: 14px;
+      display: grid; place-items: center; font-size: 22px;
+      margin-bottom: 16px;
+    }
+    .feature-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .feature-desc { font-size: 13.5px; color: var(--text-2); line-height: 1.6; }
+
+    /* ── How it works ── */
+    .how { background: linear-gradient(160deg, #F0FAF5 0%, var(--cream) 100%); }
+    .steps { display: flex; flex-direction: column; gap: 0; max-width: 680px; }
+    .step {
+      display: flex; gap: 24px; padding: 24px 0;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    .step:last-child { border-bottom: none; }
+    .step-num {
+      width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+      background: var(--green); color: #fff;
+      display: grid; place-items: center;
+      font-size: 14px; font-weight: 800;
+    }
+    .step-content { }
+    .step-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .step-desc { font-size: 14px; color: var(--text-2); line-height: 1.6; }
+
+    /* ── Roles section ── */
+    .roles-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    @media(max-width:768px){ .roles-grid{ grid-template-columns:1fr; } }
+    .role-card {
+      border-radius: 20px; padding: 32px;
+      position: relative; overflow: hidden;
+    }
+    .role-card.dueno {
+      background: linear-gradient(135deg, #FEF9E7 0%, #FEF3CD 100%);
+      border: 1px solid rgba(212,172,13,.25);
+    }
+    .role-card.ganadero {
+      background: linear-gradient(135deg, var(--green-light) 0%, #D5EFE3 100%);
+      border: 1px solid rgba(29,122,85,.2);
+    }
+    .role-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
+      padding: 4px 12px; border-radius: 20px; margin-bottom: 20px;
+    }
+    .role-badge.dueno { background: rgba(212,172,13,.2); color: #9A7D0A; }
+    .role-badge.ganadero { background: rgba(29,122,85,.15); color: var(--green); }
+    .role-title { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+    .role-desc { font-size: 14px; color: var(--text-2); margin-bottom: 20px; }
+    .role-features { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .role-feature {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 14px; font-weight: 500;
+    }
+    .role-feature::before {
+      content: '✓';
+      width: 20px; height: 20px; border-radius: 50%;
+      background: var(--green); color: #fff;
+      display: grid; place-items: center;
+      font-size: 10px; font-weight: 800; flex-shrink: 0;
+    }
+    .role-card.dueno .role-feature::before { background: #9A7D0A; }
+
+    /* ── Predicción highlight ── */
+    .predict-section {
+      background: var(--surface);
+      border-radius: 24px;
+      padding: 64px;
+      border: 1px solid var(--border);
+      display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center;
+    }
+    @media(max-width:768px){
+      .predict-section { grid-template-columns: 1fr; padding: 32px; }
+    }
+    .disease-list { display: flex; flex-direction: column; gap: 12px; margin-top: 24px; }
+    .disease-item {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--cream); border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px 16px;
+    }
+    .disease-name { font-size: 14px; font-weight: 600; }
+    .disease-bar-wrap { width: 100px; height: 6px; background: var(--border); border-radius: 3px; flex-shrink: 0; }
+    .disease-bar { height: 100%; border-radius: 3px; }
+    .disease-pct { font-size: 13px; font-weight: 700; width: 36px; text-align: right; }
+    .result-card {
+      background: var(--cream); border: 1px solid var(--border);
+      border-radius: 16px; padding: 24px; position: relative;
+    }
+    .result-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+    .result-title { font-size: 18px; font-weight: 800; }
+    .result-conf {
+      font-size: 28px; font-weight: 900; color: var(--red);
+    }
+    .result-badge {
+      font-size: 11px; font-weight: 700;
+      background: #FDECED; color: var(--red);
+      padding: 3px 10px; border-radius: 20px;
+    }
+    .result-animal { font-size: 13px; color: var(--text-2); margin-bottom: 12px; }
+    .result-sev {
+      font-size: 13px; color: var(--red); font-weight: 600;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .result-recs { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+    .rec-item {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12.5px; color: var(--text-2);
+    }
+    .rec-item::before { content: '→'; color: var(--green); font-weight: 700; }
+
+    /* ── Metrics / Charts highlight ── */
+    .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    @media(max-width:768px){ .metrics-grid { grid-template-columns: 1fr 1fr; } }
+    .metric-chip {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 20px 16px; text-align: center;
+      transition: transform .2s;
+    }
+    .metric-chip:hover { transform: translateY(-3px); }
+    .metric-emoji { font-size: 24px; margin-bottom: 8px; }
+    .metric-name { font-size: 12px; font-weight: 600; color: var(--text-1); margin-bottom: 4px; }
+    .metric-unit { font-size: 11px; color: var(--text-2); }
+
+    /* ── CTA final ── */
+    .cta-section {
+      background: linear-gradient(135deg, #1D7A55 0%, #145C3F 100%);
+      border-radius: 24px;
+      padding: 80px 64px;
+      text-align: center;
+      position: relative; overflow: hidden;
+    }
+    .cta-section::before {
+      content: '';
+      position: absolute; top: -60px; right: -60px;
+      width: 300px; height: 300px; border-radius: 50%;
+      background: rgba(255,255,255,.05);
+      pointer-events: none;
+    }
+    .cta-title {
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 900; color: #fff; letter-spacing: -.5px; margin-bottom: 16px;
+    }
+    .cta-desc { font-size: 17px; color: rgba(255,255,255,.75); margin-bottom: 36px; }
+    .btn-cta-white {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #fff; color: var(--green);
+      padding: 16px 36px; border-radius: 14px;
+      font-size: 16px; font-weight: 800;
+      box-shadow: 0 4px 20px rgba(0,0,0,.15);
+      transition: transform .2s;
+    }
+    .btn-cta-white:hover { transform: translateY(-2px); }
+
+    /* ── Footer ── */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 40px 0;
+    }
+    .footer-inner {
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 16px;
+    }
+    .footer-copy { font-size: 13px; color: var(--text-2); }
+    .footer-links { display: flex; gap: 24px; list-style: none; }
+    .footer-links a { font-size: 13px; color: var(--text-2); }
+    .footer-links a:hover { color: var(--green); }
+
+    /* ── Animations ── */
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-8px); }
+    }
+    .phone { animation: float 4s ease-in-out infinite; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════ NAVBAR ══════════════════ -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-logo">
+      <div class="logo-icon"><img src="assets/images/vaca.png" alt="GANAJEC AI logo"></div>
+      GANAJEC <span style="color:var(--green)">AI</span>
+    </div>
+    <ul class="nav-links hide-mobile">
+      <li><a href="#features">Funciones</a></li>
+      <li><a href="#como-funciona">Cómo funciona</a></li>
+      <li><a href="#roles">Roles</a></li>
+      <li><a href="#prediccion">IA</a></li>
+      <li><a href="#metricas">Métricas</a></li>
+    </ul>
+    <a class="btn-nav" href="#contacto">Solicitar acceso</a>
+  </div>
+</nav>
+
+<!-- ══════════════════ HERO ══════════════════ -->
+<section class="hero">
+  <div class="hero-inner">
+    <div>
+      <div class="hero-tag">🤖 Inteligencia Artificial para el campo</div>
+      <h1 class="hero-title">
+        Gestión inteligente<br/>de tu <span>ganado bovino</span>
+      </h1>
+      <p class="hero-desc">
+        GANAJEC AI combina registro ganadero, monitoreo de salud en tiempo real
+        y predicción de enfermedades con IA — todo desde tu teléfono. Para dueños
+        de rancho y ganaderos.
+      </p>
+      <div class="hero-cta">
+        <a class="btn-primary" href="#como-funciona">
+          ▶ &nbsp;Ver cómo funciona
+        </a>
+        <a class="btn-secondary" href="#features">
+          Explorar funciones
+        </a>
+      </div>
+    </div>
+
+    <!-- Phone mockup -->
+    <div class="phone-wrap">
+      <div class="phone">
+        <div class="phone-notch"></div>
+        <div class="phone-screen">
+          <!-- Simulated home screen -->
+          <div class="ph-header">
+            <div>
+              <div class="ph-greeting">Buenos días,</div>
+              <div style="display:flex;align-items:center;">
+                <div class="ph-name">Juan García</div>
+                <div class="ph-role-chip">Ganadero</div>
+              </div>
+            </div>
+            <div class="ph-avatar">JG</div>
+          </div>
+          <div class="ph-cards">
+            <div class="ph-card">
+              <div class="ph-card-num" style="color:var(--green)">12</div>
+              <div class="ph-card-lbl">Animales<br/>registrados</div>
+            </div>
+            <div class="ph-card">
+              <div class="ph-card-num" style="color:#27AE60">10</div>
+              <div class="ph-card-lbl">En buen<br/>estado</div>
+            </div>
+            <div class="ph-card">
+              <div class="ph-card-num" style="color:var(--red)">2</div>
+              <div class="ph-card-lbl">Con alertas<br/>activas</div>
+            </div>
+          </div>
+          <div class="ph-section-title">Mi hato</div>
+          <div class="ph-animal">
+            <div class="ph-animal-icon">🐄</div>
+            <div>
+              <div class="ph-animal-name">Lupita</div>
+              <div class="ph-animal-sub">Suizo · 3 años · LP01</div>
+            </div>
+            <div class="ph-animal-chip">Saludable</div>
+          </div>
+          <div class="ph-animal" style="border-color:#FDECED;">
+            <div class="ph-animal-icon">🐄</div>
+            <div>
+              <div class="ph-animal-name">Canela</div>
+              <div class="ph-animal-sub">Angus · 2 años · CN03</div>
+            </div>
+            <div class="ph-animal-chip" style="background:#FDECED;color:var(--red);">Alerta</div>
+          </div>
+          <div class="ph-section-title" style="margin-top:10px;">Últimas predicciones</div>
+          <div class="ph-pred">
+            <div class="ph-pred-icon">🔬</div>
+            <div>
+              <div class="ph-pred-name">Mastitis</div>
+              <div class="ph-pred-sub">Canela · CN03</div>
+            </div>
+            <div class="ph-pred-pct" style="color:var(--red)">84%</div>
+          </div>
+          <div class="ph-pred">
+            <div class="ph-pred-icon">✅</div>
+            <div>
+              <div class="ph-pred-name">Sin enfermedad</div>
+              <div class="ph-pred-sub">Lupita · LP01</div>
+            </div>
+            <div class="ph-pred-pct">12%</div>
+          </div>
+          <div class="ph-navbar">
+            <div class="ph-nav-item active">
+              <div class="ph-nav-dot">🏠</div>
+              <div class="ph-nav-lbl">Inicio</div>
+            </div>
+            <div class="ph-nav-item">
+              <div class="ph-nav-dot">🔔</div>
+              <div class="ph-nav-lbl">Alertas</div>
+            </div>
+            <div class="ph-nav-item">
+              <div class="ph-nav-dot">➕</div>
+              <div class="ph-nav-lbl">Registrar</div>
+            </div>
+            <div class="ph-nav-item">
+              <div class="ph-nav-dot">📊</div>
+              <div class="ph-nav-lbl">Reportes</div>
+            </div>
+            <div class="ph-nav-item">
+              <div class="ph-nav-dot">👤</div>
+              <div class="ph-nav-lbl">Perfil</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ FEATURES ══════════════════ -->
+<section class="section features" id="features">
+  <div class="container">
+    <div class="badge">✦ Funciones</div>
+    <h2 class="section-title">Todo lo que necesitas para<br/>gestionar tu rancho</h2>
+    <p class="section-sub">Desde el registro de cada bovino hasta predicciones de enfermedades con IA — en una sola app móvil.</p>
+    <div class="grid-3">
+      <div class="feature-card">
+        <div class="feature-icon" style="background:#E8F5EF;">🐄</div>
+        <div class="feature-title">Registro completo de bovinos</div>
+        <div class="feature-desc">Registra nombre, raza, edad y peso. Toda la información de tu hato en un solo lugar.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:#FEF9E7;">🤖</div>
+        <div class="feature-title">Predicción de enfermedades con IA</div>
+        <div class="feature-desc">Registra síntomas y obtén una predicción instantánea con porcentaje de confianza y severidad (baja · media · alta).</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:#EBF5FB;">📈</div>
+        <div class="feature-title">Gráficas de evolución</div>
+        <div class="feature-desc">Visualiza temperatura, producción de leche y consumo de alimento con gráficas de línea por animal.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:#FDEDEC;">🔔</div>
+        <div class="feature-title">Alertas en tiempo real</div>
+        <div class="feature-desc">Recibe alertas cuando un animal muestra señales preocupantes. Márcalas como leídas individualmente o todas a la vez.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:#F5EEF8;">🏡</div>
+        <div class="feature-title">Gestión de ranchos y ganaderos</div>
+        <div class="feature-desc">El dueño crea ranchos y comparte un código de invitación. Los ganaderos se unen con ese código y quedan vinculados.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:#EAFAF1;">📋</div>
+        <div class="feature-title">Historial y reportes</div>
+        <div class="feature-desc">Consulta el historial jerárquico: rancho → ganadero → bovino → registros. Con buscador global y estadísticas de alertas.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ CÓMO FUNCIONA ══════════════════ -->
+<section class="section how" id="como-funciona">
+  <div class="container">
+    <div class="grid-2" style="align-items:center; gap:64px;">
+      <div>
+        <div class="badge">✦ Proceso</div>
+        <h2 class="section-title">De síntoma a diagnóstico<br/>en segundos</h2>
+        <p class="section-sub">El flujo es sencillo: registras lo que observas, la IA hace el resto.</p>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <div class="step-title">Selecciona el animal</div>
+              <div class="step-desc">Busca al bovino en tu hato por nombre o ID de arete desde la pantalla de detalle.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <div class="step-title">Registra los síntomas</div>
+              <div class="step-desc">Anota temperatura, peso, producción de leche, consumo de alimento y observaciones libres.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <div class="step-title">Obtén la predicción</div>
+              <div class="step-desc">La IA analiza el registro y devuelve la enfermedad probable, nivel de confianza y recomendaciones de acción.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-content">
+              <div class="step-title">Monitorea la evolución</div>
+              <div class="step-desc">Cada registro queda guardado. Ve la evolución de cada métrica con gráficas de línea en el detalle del animal.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Result card mockup -->
+      <div>
+        <div class="result-card">
+          <div class="result-header">
+            <div>
+              <div class="result-title">Fiebre aftosa</div>
+              <div class="result-animal">Canela · Angus · 2 años · CN03</div>
+              <div class="result-sev">⚠️ Severidad alta</div>
+            </div>
+            <div style="text-align:right;">
+              <div class="result-conf">84%</div>
+              <div class="result-badge">Alerta crítica</div>
+            </div>
+          </div>
+          <div style="height:1px;background:var(--border);margin:16px 0;"></div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text-2);letter-spacing:.5px;">RECOMENDACIONES</div>
+          <div class="result-recs">
+            <div class="rec-item">Aislar el animal del hato inmediatamente</div>
+            <div class="rec-item">Contactar al veterinario en las próximas 24h</div>
+            <div class="rec-item">Monitorear temperatura cada 6 horas</div>
+            <div class="rec-item">Revisar el resto del hato en busca de síntomas</div>
+          </div>
+          <div style="margin-top:16px;padding:10px 14px;background:var(--green-light);border-radius:10px;display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:12px;color:var(--green);font-weight:600;">Generado hace 2 min</span>
+            <span style="font-size:12px;color:var(--text-2);">Por IA · GANAJEC AI</span>
+          </div>
+        </div>
+        <!-- Disease probabilities -->
+        <div class="disease-list">
+          <div style="font-size:12px;font-weight:700;color:var(--text-2);letter-spacing:.5px;margin-bottom:4px;">PROBABILIDADES CONSIDERADAS</div>
+          <div class="disease-item">
+            <div class="disease-name">Fiebre aftosa</div>
+            <div class="disease-bar-wrap"><div class="disease-bar" style="width:84%;background:var(--red);"></div></div>
+            <div class="disease-pct" style="color:var(--red)">84%</div>
+          </div>
+          <div class="disease-item">
+            <div class="disease-name">Mastitis</div>
+            <div class="disease-bar-wrap"><div class="disease-bar" style="width:10%;background:#E67E22;"></div></div>
+            <div class="disease-pct" style="color:#E67E22">10%</div>
+          </div>
+          <div class="disease-item">
+            <div class="disease-name">Sin enfermedad</div>
+            <div class="disease-bar-wrap"><div class="disease-bar" style="width:6%;background:var(--green);"></div></div>
+            <div class="disease-pct" style="color:var(--green)">6%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ ROLES ══════════════════ -->
+<section class="section" id="roles" style="background:var(--surface);">
+  <div class="container">
+    <div class="badge">✦ Roles</div>
+    <h2 class="section-title">Diseñado para dos perfiles</h2>
+    <p class="section-sub">Un dueño puede administrar varios ranchos y ganaderos. Cada ganadero gestiona su propio hato dentro del rancho al que pertenece.</p>
+    <div class="roles-grid">
+      <div class="role-card dueno">
+        <div class="role-badge dueno">👑 Dueño de rancho</div>
+        <div class="role-title">Visión completa<br/>del negocio</div>
+        <div class="role-desc">Administra múltiples ranchos, visualiza todos los bovinos de tus ganaderos y consulta predicciones agrupadas por rancho.</div>
+        <ul class="role-features">
+          <li class="role-feature">Crear y editar ranchos</li>
+          <li class="role-feature">Generar códigos de invitación</li>
+          <li class="role-feature">Ver bovinos de todos tus ganaderos</li>
+          <li class="role-feature">Historial jerárquico rancho → bovino</li>
+          <li class="role-feature">Predicciones con contexto de ganadero</li>
+          <li class="role-feature">Mover ganaderos entre ranchos</li>
+        </ul>
+      </div>
+      <div class="role-card ganadero">
+        <div class="role-badge ganadero">🌾 Ganadero</div>
+        <div class="role-title">Control total<br/>de tu hato</div>
+        <div class="role-desc">Registra tus bovinos, sigue su evolución de salud y recibe diagnósticos de IA. Únete a un rancho con el código que te da tu dueño.</div>
+        <ul class="role-features">
+          <li class="role-feature">Registrar y editar bovinos</li>
+          <li class="role-feature">Ingresar síntomas y obtener predicciones</li>
+          <li class="role-feature">Ver gráficas de evolución por animal</li>
+          <li class="role-feature">Historial de predicciones propio</li>
+          <li class="role-feature">Alertas activas de su hato</li>
+          <li class="role-feature">Ver colegas del mismo rancho</li>
+        </ul>
+      </div>
+    </div>
+    <!-- Invitation flow callout -->
+    <div style="margin-top:32px;background:var(--cream);border:1px solid var(--border);border-radius:16px;padding:24px 32px;display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+      <div style="font-size:32px;">🔑</div>
+      <div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:4px;">Sistema de código de invitación</div>
+        <div style="font-size:13.5px;color:var(--text-2);">El dueño crea un rancho y obtiene un código único. El ganadero lo ingresa en la app y queda vinculado automáticamente. Sin correos, sin burocracia.</div>
+      </div>
+      <div style="margin-left:auto;background:var(--green-light);border:1px solid rgba(29,122,85,.2);border-radius:10px;padding:12px 20px;text-align:center;">
+        <div style="font-size:22px;font-weight:900;letter-spacing:4px;color:var(--green);">A7X9KQ</div>
+        <div style="font-size:10px;color:var(--text-2);margin-top:2px;">Ejemplo de código</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ PREDICCIÓN ══════════════════ -->
+<section class="section" id="prediccion" style="background:var(--cream);">
+  <div class="container">
+    <div class="badge">✦ Inteligencia Artificial</div>
+    <h2 class="section-title">IA entrenada para enfermedades bovinas</h2>
+    <p class="section-sub">El modelo analiza los síntomas y métricas registradas para devolver diagnósticos con nivel de confianza y severidad.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-top:8px;">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;display:flex;align-items:center;gap:12px;">
+        <div style="font-size:24px;">🦷</div>
+        <div>
+          <div style="font-size:14px;font-weight:700;">Fiebre aftosa</div>
+          <div style="font-size:11px;color:var(--text-2);">Alta severidad</div>
+        </div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;display:flex;align-items:center;gap:12px;">
+        <div style="font-size:24px;">🥛</div>
+        <div>
+          <div style="font-size:14px;font-weight:700;">Mastitis</div>
+          <div style="font-size:11px;color:var(--text-2);">Baja producción</div>
+        </div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;display:flex;align-items:center;gap:12px;">
+        <div style="font-size:24px;">🫁</div>
+        <div>
+          <div style="font-size:14px;font-weight:700;">Acidosis ruminal</div>
+          <div style="font-size:11px;color:var(--text-2);">Consumo alterado</div>
+        </div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;display:flex;align-items:center;gap:12px;">
+        <div style="font-size:24px;">✅</div>
+        <div>
+          <div style="font-size:14px;font-weight:700;">Sin enfermedad</div>
+          <div style="font-size:11px;color:var(--green);">Animal sano</div>
+        </div>
+      </div>
+    </div>
+    <!-- Confidence bar demo -->
+    <div style="margin-top:40px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;">
+      <div style="font-size:14px;font-weight:700;color:var(--text-2);letter-spacing:.5px;margin-bottom:20px;">ESCALA DE CONFIANZA Y SEVERIDAD</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;text-align:center;">
+        <div style="padding:20px;background:#EAFAF1;border-radius:14px;border:1px solid rgba(39,174,96,.2);">
+          <div style="font-size:28px;font-weight:900;color:#27AE60">≤40%</div>
+          <div style="font-size:13px;font-weight:700;color:#27AE60;margin-top:4px;">Baja</div>
+          <div style="font-size:12px;color:var(--text-2);margin-top:6px;">Probable estado saludable. Monitoreo preventivo.</div>
+        </div>
+        <div style="padding:20px;background:#FEF9E7;border-radius:14px;border:1px solid rgba(212,172,13,.25);">
+          <div style="font-size:28px;font-weight:900;color:#9A7D0A">40–79%</div>
+          <div style="font-size:13px;font-weight:700;color:#9A7D0A;margin-top:4px;">Media</div>
+          <div style="font-size:12px;color:var(--text-2);margin-top:6px;">Síntomas presentes. Consultar con veterinario.</div>
+        </div>
+        <div style="padding:20px;background:#FDEDEC;border-radius:14px;border:1px solid rgba(192,57,43,.2);">
+          <div style="font-size:28px;font-weight:900;color:var(--red)">≥80%</div>
+          <div style="font-size:13px;font-weight:700;color:var(--red);margin-top:4px;">Alta</div>
+          <div style="font-size:12px;color:var(--text-2);margin-top:6px;">Riesgo alto. Acción inmediata requerida.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ MÉTRICAS ══════════════════ -->
+<section class="section" id="metricas" style="background:var(--surface);">
+  <div class="container">
+    <div class="badge">✦ Métricas</div>
+    <h2 class="section-title">Registra lo que observas,<br/>en tus propias palabras</h2>
+    <p class="section-sub">Además de los indicadores numéricos, cada registro incluye un campo de texto libre donde puedes anotar cualquier observación sobre el animal.</p>
+    <!-- Mini chart visual -->
+    <div style="margin-top:40px;background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:32px;overflow:hidden;">
+      <div style="font-size:14px;font-weight:700;margin-bottom:4px;">Temperatura corporal — Lupita</div>
+      <div style="font-size:12px;color:var(--text-2);margin-bottom:20px;">Últimos 5 registros · °C</div>
+      <!-- SVG mini chart -->
+      <svg viewBox="0 0 600 120" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;">
+        <defs>
+          <linearGradient id="tempGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#E74C3C" stop-opacity="0.18"/>
+            <stop offset="100%" stop-color="#E74C3C" stop-opacity="0.02"/>
+          </linearGradient>
+        </defs>
+        <!-- Grid lines -->
+        <line x1="0" y1="30" x2="600" y2="30" stroke="#E8E5DC" stroke-width="1" stroke-dasharray="4,4"/>
+        <line x1="0" y1="60" x2="600" y2="60" stroke="#E8E5DC" stroke-width="1" stroke-dasharray="4,4"/>
+        <line x1="0" y1="90" x2="600" y2="90" stroke="#E8E5DC" stroke-width="1" stroke-dasharray="4,4"/>
+        <!-- Y labels -->
+        <text x="4" y="28" font-size="9" fill="#AEADA6">40.5°</text>
+        <text x="4" y="58" font-size="9" fill="#AEADA6">39.5°</text>
+        <text x="4" y="88" font-size="9" fill="#AEADA6">38.5°</text>
+        <!-- Area fill -->
+        <path d="M50,80 C110,70 170,40 250,50 C330,60 390,30 470,25 L470,110 L50,110 Z"
+              fill="url(#tempGrad)"/>
+        <!-- Line -->
+        <path d="M50,80 C110,70 170,40 250,50 C330,60 390,30 470,25"
+              fill="none" stroke="#E74C3C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- Dots -->
+        <circle cx="50"  cy="80" r="4" fill="#E74C3C" stroke="white" stroke-width="2"/>
+        <circle cx="170" cy="40" r="4" fill="#E74C3C" stroke="white" stroke-width="2"/>
+        <circle cx="250" cy="50" r="4" fill="#E74C3C" stroke="white" stroke-width="2"/>
+        <circle cx="390" cy="30" r="4" fill="#E74C3C" stroke="white" stroke-width="2"/>
+        <circle cx="470" cy="25" r="6" fill="#E74C3C" stroke="white" stroke-width="2.5"/>
+        <!-- Last value label -->
+        <rect x="475" y="10" width="48" height="18" rx="6" fill="#E74C3C"/>
+        <text x="499" y="22" font-size="10" fill="white" font-weight="700" text-anchor="middle">40.1°C</text>
+        <!-- X labels -->
+        <text x="50"  y="115" font-size="9" fill="#AEADA6" text-anchor="middle">1/06</text>
+        <text x="170" y="115" font-size="9" fill="#AEADA6" text-anchor="middle">5/06</text>
+        <text x="250" y="115" font-size="9" fill="#AEADA6" text-anchor="middle">9/06</text>
+        <text x="390" y="115" font-size="9" fill="#AEADA6" text-anchor="middle">15/06</text>
+        <text x="470" y="115" font-size="9" fill="#AEADA6" text-anchor="middle">19/06</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ CTA FINAL ══════════════════ -->
+<section class="section-sm" id="contacto">
+  <div class="container">
+    <div class="cta-section">
+      <h2 class="cta-title">Empieza a monitorear<br/>tu ganado hoy</h2>
+      <p class="cta-desc">Crea tu cuenta, registra tu rancho y comienza a predecir enfermedades<br/>con inteligencia artificial.</p>
+      <a class="btn-cta-white" href="#">
+        🐄 &nbsp; Solicitar acceso anticipado
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ FOOTER ══════════════════ -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div>
+        <div class="nav-logo" style="margin-bottom:6px;">
+          <div class="logo-icon"><img src="assets/images/vaca.png" alt="GANAJEC AI logo"></div>
+          GANAJEC <span style="color:var(--green)">AI</span>
+        </div>
+        <div class="footer-copy">Gestión inteligente de ganado bovino · © 2026 GANAJEC AI</div>
+      </div>
+      <ul class="footer-links">
+        <li><a href="#features">Funciones</a></li>
+        <li><a href="#roles">Roles</a></li>
+        <li><a href="#prediccion">IA</a></li>
+        <li><a href="#metricas">Métricas</a></li>
+      </ul>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
